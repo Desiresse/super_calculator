@@ -1,0 +1,51 @@
+# This workflow executes several linters on changed files based on languages used in your code base whenever
+# you push a code or open a pull request.
+#
+# You can adjust the behavior by modifying this file.
+# For more information, see:
+# https://github.com/github/super-linter
+name: Lint Code Base
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+      - name: Install and run Semgrep
+        run: |
+          pip install semgrep 
+          semgrep --config=p/ci
+
+  hadolint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Run Hadolint
+        run: |
+            docker run --rm -i hadolint/hadolint:latest \
+            hadolint --ignore DL3020 --ignore DL3006 -
+            < Dockerfile
+  superlinter:
+    if: github.event_name == 'pull_request' 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+      - name: Run Super-Linter
+        uses: github/super-linter@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: false               # Ne valide pas tout le code par défaut.
+          VALIDATE_ONLY_CHANGED_FILES: true          # Analyse uniquement les fichiers modifiés.
+          LINTER_RULES_PATH: .github/linters         # Chemin des règles personnalisées (si défini).
+          DISABLE_LINTERS: markdown,json             # Désactive les linters Markdown et JSON.

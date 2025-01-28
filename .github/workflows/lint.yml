@@ -1,0 +1,24 @@
+
+name: Lint Workflow
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+
+      - name: Run Hadolint
+        run: hadolint Dockerfile
+
+      - name: Run Super-Linter
+        if: github.event_name == 'pull_request'
+        uses: github/super-linter@v4
